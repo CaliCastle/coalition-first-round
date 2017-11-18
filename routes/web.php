@@ -11,6 +11,18 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+function getSavedData() {
+    $files = \Storage::files('form-data');
+    $data = collect();
+
+    foreach ($files as $file) {
+        if (\Storage::exists($file)) {
+            $content = \Storage::get($file);
+            $data->push(json_decode($content));
+        }
+    }
+    return $data;
+}
+
+Route::get('form', 'FormController@index')->name('form');
+Route::post('form', 'FormController@post');
