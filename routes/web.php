@@ -26,3 +26,4 @@ function getSavedData() {
 
 Route::get('form', 'FormController@index')->name('form');
 Route::post('form', 'FormController@post');
+Route::post('form/update', 'FormController@update')->name('update-form');

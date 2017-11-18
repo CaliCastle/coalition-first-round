@@ -30,6 +30,9 @@
 <body class="no-js">
 <div class="container">
 	<section>
+		<div class="col-md-12 text-center">
+			<h1>Coalition First Round Skills Test</h1>
+		</div>
 		<div class="col-md-10 col-md-offset-1">
 			<form action="{{ route('form') }}" class="form" method="POST">
 
@@ -79,7 +82,7 @@
 				</thead>
 				<tbody>
 				@foreach(getSavedData() as $data)
-					<tr>
+					<tr id="{{ $data->date_time }}">
 						<th>{{ $data->product_name }}</th>
 						<th>{{ $data->quantity }}</th>
 						<th>{{ $data->price }}</th>
@@ -110,8 +113,10 @@
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script>
+		let isEditing = false;
+
 		$(function() {
-			$("form").on('submit', (ev) => {
+			$("form:not(.update-form)").on('submit', (ev) => {
 			    ev.preventDefault();
 			    let form = ev.target;
 
@@ -123,14 +128,81 @@
 						if (data.status == 'success') {
 						    $('table').append(data.html);
 						}
+						// Re-register events.
+						registerEvents()
 					},
 					error() {
 					    alert("Error when sending request.");
 					}
 				});
             });
+
+			registerEvents()
+
+			function registerEvents() {
+				$('tbody tr').each((i, item) => {
+					$(item).on('click', () => {
+					    if (!isEditing) {
+                            beginEditingAt(item);
+                        }
+					});
+                });
+            }
+
+            function beginEditingAt(item) {
+			    isEditing = true
+	            let items = item.querySelectorAll('th');
+
+	            $(items).each((index, data) => {
+	                let value = data.innerHTML;
+	                let inputType = index == 0 ? 'text' : 'number';
+		            let inputName = "";
+
+		            switch (index) {
+			            case 0:
+			                inputName = "product_name";
+			                break;
+			            case 1:
+			                inputName = "quantity";
+			                break;
+			            case 2:
+			                inputName = "price";
+			            default:
+			                break
+		            }
+
+	                if (index <= 2) {
+                        data.innerHTML = `<input class="form-control" type='${inputType}' name="${inputName}" value='${value}'>`
+                    } else if (index == 3) {
+		                data.innerHTML += `<input hidden name="date_time" value="${data.querySelector('time').dateTime}">`
+	                }
+	            });
+
+                registerKeyboardEvents()
+            }
+
+            function registerKeyboardEvents() {
+	            $("th input").on('keydown', (ev) => {
+	                if (ev.keyCode == 13) {
+	                    // Enter pressed.
+                        ev.preventDefault();
+		                let inputs = ev.target.parentNode.parentNode.querySelectorAll('input');
+
+		                $(inputs).each((index, item) => {
+		                       $("form.update-form").append(item);
+		                });
+
+		                $("form.update-form").submit();
+	                }
+	            })
+            }
 		});
 	</script>
+
+<form action="{{ route('update-form') }}" class="update-form hidden" method="POST" hidden>
+	{{ csrf_field() }}
+</form>
+
 </div>
 </body>
 </html>

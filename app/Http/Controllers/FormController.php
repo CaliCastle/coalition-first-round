@@ -22,6 +22,8 @@ class FormController extends Controller
     }
 
     /**
+     * Show form.
+     *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
@@ -30,6 +32,9 @@ class FormController extends Controller
     }
 
     /**
+     * Handle post request.
+     *
+     * @return array
      */
     public function post()
     {
@@ -50,7 +55,7 @@ class FormController extends Controller
 
             return [
                 'status' => 'success',
-                'html'   => '<tr><th>'
+                'html'   => '<tr id="' . $data['date_time'] . '"><th>'
                     . $data['product_name'] . '</th><th>'
                     . $data['quantity'] . '</th><th>'
                     . $data['price'] . '</th><th><time datetime="'
@@ -59,5 +64,24 @@ class FormController extends Controller
                     . $data['total_value_number'] . '</th></tr>'
             ];
         }
+    }
+
+    /**
+     * Update a line of data.
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function update()
+    {
+        $data = $this->request->except('method', '_token');
+        $file_path = 'form-data/' . $data['date_time'] . '.json';
+
+        if (Storage::exists($file_path)) {
+            $data['date_time'] = date('Y-m-d H:i:s');
+            $data['total_value_number'] = (int)$this->request->quantity * $this->request->price;
+            Storage::put($file_path, json_encode($data));
+        }
+
+        return redirect(route('form'));
     }
 }
